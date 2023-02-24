@@ -7,7 +7,7 @@ ARG OPENSSL_ARCH=linux-x86_64
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.66.0
+ENV RUST_VERSION=1.67.1
 
 ENV RUSTUP_VER="1.25.2" RUSTUP_SHA256="bb31eaf643926b2ee9f4d8d6fc0e2835e03c0a60f34d324048aa194f0b29a71c"
 RUN curl -O https://static.rust-lang.org/rustup/archive/$RUSTUP_VER/x86_64-unknown-linux-gnu/rustup-init && \
