@@ -50,6 +50,7 @@ jobs:
 
           docker buildx build . \
              --push \
+             --build-arg TAG=${{ matrix.tag }} \
              --build-arg TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
              --tag $IMAGE_ID:$VERSION \
