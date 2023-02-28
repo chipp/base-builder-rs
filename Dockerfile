@@ -4,6 +4,9 @@ FROM ghcr.io/chipp/build.musl.${TAG}:latest
 
 ARG TARGET=x86_64-unknown-linux-musl
 ARG OPENSSL_ARCH=linux-x86_64
+ARG GITHUB_REPO
+
+LABEL org.opencontainers.image.source GITHUB_REPO
 
 ENV PATH=/root/.cargo/bin:$PATH
 
