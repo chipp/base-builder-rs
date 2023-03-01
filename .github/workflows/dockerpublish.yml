@@ -53,7 +53,7 @@ jobs:
              --build-arg TAG=${{ matrix.tag }} \
              --build-arg TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
-             --build-arg GITHUB_REPO=https://github.com/$GITHUB_REPOSITORY \
+             --build-arg GITHUB_REPO=https://github.com/${{ github.repository }} \
              --tag $IMAGE_ID:$VERSION \
              --tag $IMAGE_ID:$RUST_RELEASE \
              --tag $IMAGE_ID:latest \
