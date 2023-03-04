@@ -54,6 +54,7 @@ jobs:
              --build-arg TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+             --platform linux/amd64,linux/arm64 \
              --tag $IMAGE_ID:$VERSION \
              --tag $IMAGE_ID:$RUST_RELEASE \
              --tag $IMAGE_ID:latest \
