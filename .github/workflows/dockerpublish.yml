@@ -51,7 +51,7 @@ jobs:
           docker buildx build . \
              --push \
              --build-arg TAG=${{ matrix.tag }} \
-             --build-arg TARGET=${{ matrix.target }} \
+             --build-arg RUST_TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              --platform linux/amd64,linux/arm64 \
