@@ -1,6 +1,6 @@
-ARG TAG=x86_64_musl
+ARG VARIANT=x86_64_musl
 
-FROM ghcr.io/chipp/build.musl.${TAG}:latest
+FROM ghcr.io/chipp/build.musl.${VARIANT}:latest
 
 ARG TARGETARCH
 ARG RUST_TARGET=x86_64-unknown-linux-musl
@@ -8,7 +8,7 @@ ARG OPENSSL_ARCH=linux-x86_64
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.72.0
+ENV RUST_VERSION=1.73.0
 
 ENV RUSTUP_VER=1.26.0
 
