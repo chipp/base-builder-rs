@@ -56,9 +56,11 @@ jobs:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
             openssl_arch: linux-x86_64
+            additional_libs:
           - variant: armv7_musl
             target: armv7-unknown-linux-musleabihf
             openssl_arch: linux-generic32
+            additional_libs: -latomic
 
     env:
       IMAGE_NAME: build.rust.${{ matrix.variant }}
@@ -89,6 +91,7 @@ jobs:
              --build-arg VARIANT=${{ matrix.variant }} \
              --build-arg RUST_TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
+             --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              --platform linux/amd64,linux/arm64 \
              --tag $IMAGE_ID:$VERSION \
