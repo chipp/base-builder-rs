@@ -6,6 +6,24 @@ tag:
 	git tag $(RUST_VERSION)_$(NEXT_REVISION) HEAD
 	git push origin $(RUST_VERSION)_$(NEXT_REVISION)
 
+test:
+	docker buildx build . \
+		--push \
+		--build-arg VARIANT=x86_64_musl \
+		--build-arg RUST_TARGET=x86_64-unknown-linux-musl \
+		--build-arg OPENSSL_ARCH=linux-x86_64 \
+		--platform linux/arm64 \
+		--progress plain \
+		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
+	docker buildx build validate \
+		--load \
+		--platform linux/arm64 \
+		--progress plain \
+		--no-cache \
+		--tag ghcr.io/chipp/build.rust.x86_64_musl.validate:test
+	docker rmi \
+		ghcr.io/chipp/build.rust.x86_64_musl.validate:test
+
 release_x86_64: VERSION=$(shell git tag --sort=committerdate | tail -1 | tr -d '\n')
 release_x86_64: RUST_VERSION=$(shell printf ${VERSION} | sed -e 's,\(.*\)_.*,\1,')
 release_x86_64:
