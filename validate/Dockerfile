@@ -1,3 +1,12 @@
-FROM ghcr.io/chipp/build.rust.x86_64_musl:test AS builder
+ARG VARIANT=x86_64_musl
 
-RUN pkg-config --static --libs --cflags libcrypto libssl openssl zlib libcurl sqlite3
+FROM ghcr.io/chipp/build.rust.${VARIANT}:test AS builder
+
+WORKDIR /home/rust/src
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+
+COPY ./src ./src
+
+RUN cargo build --release -p validate && \
+    rm -rf target

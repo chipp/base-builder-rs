@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        variant: [x86_64_musl, armv7_musl]
+        include:
+          - variant: x86_64_musl
+            target: x86_64-unknown-linux-musl
+            openssl_arch: linux-x86_64
+            openssl_cflags:
+            additional_libs:
+          - variant: armv7_musl
+            target: armv7-unknown-linux-musleabihf
+            openssl_arch: linux-armv4
+            openssl_cflags: "-march=armv7-a -mfpu=vfpv3-d16"
+            additional_libs: -latomic
+
+    env:
+      DOCKER_BUILDKIT: 0
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+
+      - name: Test
+        run: |
+          IMAGE_ID=ghcr.io/chipp/build.rust.${{ matrix.variant }}
+
+          docker build . \
+            --build-arg VARIANT="${{ matrix.variant }}" \
+            --build-arg RUST_TARGET="${{ matrix.target }}" \
+            --build-arg OPENSSL_ARCH="${{ matrix.openssl_arch }}" \
+            --build-arg OPENSSL_CFLAGS="${{ matrix.openssl_cflags }}" \
+            --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
+            --build-arg TARGETARCH=amd64 \
+            --tag $IMAGE_ID:test
+
+          docker build validate \
+            --build-arg VARIANT=${{ matrix.variant }} \
+            --no-cache \
+            --tag $IMAGE_ID:validate

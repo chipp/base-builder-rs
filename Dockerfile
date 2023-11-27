@@ -2,9 +2,12 @@ ARG VARIANT=x86_64_musl
 
 FROM ghcr.io/chipp/build.musl.${VARIANT}:latest
 
+# used in install.sh, provided by docker builder
 ARG TARGETARCH
+
 ARG RUST_TARGET=x86_64-unknown-linux-musl
 ARG OPENSSL_ARCH=linux-x86_64
+ARG OPENSSL_CFLAGS
 ARG ADDITIONAL_LIBS
 
 ENV ZLIB_VER=1.3
@@ -17,14 +20,18 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.0.11
-ENV SSL_SHA256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55"
+ENV SSL_VER=3.2.0
+ENV SSL_SHA256="14c826f07c7e433706fb5c69fa9e25dab95684844b4c962a2cf1bf183eb4690e"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
-  CC=gcc CXX=g++ ./Configure -fPIC --cross-compile-prefix=${TARGET}- \
+  CC=gcc ./Configure --cross-compile-prefix=${TARGET}- \
   --prefix=$PREFIX --openssldir=$PREFIX/ssl ${ADDITIONAL_LIBS} \
-  no-tests no-zlib no-shared no-module $OPENSSL_ARCH && \
+  no-dso no-shared no-ssl3 no-tests no-comp no-zlib no-zlib-dynamic \
+  no-md2 no-rc5 no-weak-ssl-ciphers no-camellia no-idea no-seed \
+  no-engine no-async $OPENSSL_ARCH $OPENSSL_CFLAGS \
+  -fdata-sections -ffunction-sections -fPIC -O2 \
+  -DOPENSSL_NO_SECURE_MEMORY && \
   env C_INCLUDE_PATH=$PREFIX/include make depend 2> /dev/null && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
@@ -77,6 +84,4 @@ COPY install.sh .
 RUN ./install.sh
 
 RUN echo "[build]\ntarget = \"$RUST_TARGET\"\n\n\
-  [target.$RUST_TARGET]\nlinker = \"$RUST_TARGET-gcc\"\n" > /root/.cargo/config
-
-ENV RUSTFLAGS=-L$PREFIX/lib
+  [target.$RUST_TARGET]\nlinker = \"$TARGET-gcc\"\n" > /root/.cargo/config
