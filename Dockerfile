@@ -81,7 +81,7 @@ ENV RUSTUP_AMD64_SHA256="0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d292
 ENV RUSTUP_ARM64_SHA256="673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800"
 
 COPY install.sh .
-RUN ./install.sh
+RUN ./install.sh && rm -rf install.sh
 
 RUN echo "[build]\ntarget = \"$RUST_TARGET\"\n\n\
   [target.$RUST_TARGET]\nlinker = \"$TARGET-gcc\"\n" > /root/.cargo/config
