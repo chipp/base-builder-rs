@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        variant: [x86_64_musl, armv7_musl]
+        variant: [x86_64_musl, armv7_musl, arm64_musl]
         include:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
@@ -23,6 +23,11 @@ jobs:
             openssl_arch: linux-armv4
             openssl_cflags: "-march=armv7-a -mfpu=vfpv3-d16"
             additional_libs: -latomic
+          - variant: arm64_musl
+            target: aarch64-unknown-linux-musl
+            openssl_arch: linux-aarch64
+            openssl_cflags:
+            additional_libs:
 
     env:
       DOCKER_BUILDKIT: 0

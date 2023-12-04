@@ -11,7 +11,9 @@ test_x86_64:
 		--build-arg VARIANT=x86_64_musl \
 		--build-arg RUST_TARGET=x86_64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-x86_64 \
-		--tag ghcr.io/chipp/build.rust.x86_64_musl:test1
+		--build-arg OPENSSL_CFLAGS="" \
+		--build-arg ADDITIONAL_LIBS="" \
+		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
 	DOCKER_BUILDKIT=0 docker build validate \
 		--build-arg VARIANT=x86_64_musl \
 		--no-cache \
@@ -31,6 +33,20 @@ test_armv7:
 		--no-cache \
 		--tag ghcr.io/chipp/build.rust.armv7_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.armv7_musl:test
+
+test_arm64:
+	DOCKER_BUILDKIT=0 docker build . \
+		--build-arg VARIANT=arm64_musl \
+		--build-arg RUST_TARGET=aarch64-unknown-linux-musl \
+		--build-arg OPENSSL_ARCH=linux-aarch64 \
+		--build-arg OPENSSL_CFLAGS="" \
+		--build-arg ADDITIONAL_LIBS="" \
+		--tag ghcr.io/chipp/build.rust.arm64_musl:test
+	DOCKER_BUILDKIT=0 docker build validate \
+		--build-arg VARIANT=arm64_musl \
+		--no-cache \
+		--tag ghcr.io/chipp/build.rust.arm64_musl.validate:test
+	docker rmi ghcr.io/chipp/build.rust.arm64_musl.validate:test
 
 release_x86_64: VERSION=$(shell git tag --sort=committerdate | tail -1 | tr -d '\n')
 release_x86_64: RUST_VERSION=$(shell printf ${VERSION} | sed -e 's,\(.*\)_.*,\1,')
@@ -66,4 +82,20 @@ release_armv7:
 		--cache-from=type=registry,ref=ghcr.io/chipp/build.rust.armv7_musl:cache \
 		--cache-to=type=registry,ref=ghcr.io/chipp/build.rust.armv7_musl:cache,mode=max
 
-release: release_x86_64 release_armv7
+release_arm64: VERSION=$(shell git tag --sort=committerdate | tail -1 | tr -d '\n')
+release_arm64: RUST_VERSION=$(shell printf ${VERSION} | sed -e 's,\(.*\)_.*,\1,')
+release_arm64:
+	docker build . \
+		--push \
+		--build-arg VARIANT=arm64_musl \
+		--build-arg RUST_TARGET=aarch64-unknown-linux-musl \
+		--build-arg OPENSSL_ARCH=linux-aarch64 \
+		--label "org.opencontainers.image.source=https://github.com/chipp/base-builder-rs" \
+		--platform linux/amd64,linux/arm64 \
+		--tag ghcr.io/chipp/build.rust.arm64_musl:${VERSION} \
+		--tag ghcr.io/chipp/build.rust.arm64_musl:${RUST_VERSION} \
+		--tag ghcr.io/chipp/build.rust.arm64_musl:latest \
+		--cache-from=type=registry,ref=ghcr.io/chipp/build.rust.arm64_musl:cache \
+		--cache-to=type=registry,ref=ghcr.io/chipp/build.rust.arm64_musl:cache,mode=max
+
+release: release_x86_64 release_armv7 release_arm64
