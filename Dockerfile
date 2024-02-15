@@ -10,8 +10,8 @@ ARG OPENSSL_ARCH=linux-x86_64
 ARG OPENSSL_CFLAGS
 ARG ADDITIONAL_LIBS
 
-ENV ZLIB_VER=1.3
-ENV ZLIB_SHA256="ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e"
+ENV ZLIB_VER=1.3.1
+ENV ZLIB_SHA256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
 RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   echo "$ZLIB_SHA256  zlib-$ZLIB_VER.tar.gz" | sha256sum -c - && \
   tar xfz zlib-${ZLIB_VER}.tar.gz && cd zlib-$ZLIB_VER && \
@@ -73,7 +73,7 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.75.0
+ENV RUST_VERSION=1.76.0
 
 ENV RUSTUP_VER=1.26.0
 
