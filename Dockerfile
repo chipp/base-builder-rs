@@ -20,8 +20,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.2.0
-ENV SSL_SHA256="14c826f07c7e433706fb5c69fa9e25dab95684844b4c962a2cf1bf183eb4690e"
+ENV SSL_VER=3.2.1
+ENV SSL_SHA256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -36,8 +36,8 @@ RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
 
-ENV CURL_VER=8.4.0
-ENV CURL_SHA256="816e41809c043ff285e8c0f06a75a1fa250211bbfb2dc0a037eeef39f1a9e427"
+ENV CURL_VER=8.7.1
+ENV CURL_SHA256="f91249c87f68ea00cf27c44fdfa5a78423e41e71b7d408e5901a9896d905c495"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
   tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
@@ -51,9 +51,9 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
   cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3440000
-ENV SQLITE_SHA256="b9cd386e7cd22af6e0d2a0f06d0404951e1bef109e42ea06cc0450e10cd15550"
-RUN curl -sSL -O https://www.sqlite.org/2023/sqlite-autoconf-$SQLITE_VER.tar.gz && \
+ENV SQLITE_VER=3450200
+ENV SQLITE_SHA256="bc9067442eedf3dd39989b5c5cfbfff37ae66cc9c99274e0c3052dc4d4a8f6ae"
+RUN curl -sSL -O https://www.sqlite.org/2024/sqlite-autoconf-$SQLITE_VER.tar.gz && \
   echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
   tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
   CC="$CC -fPIC -pie" ./configure --enable-shared=no --host $TARGET --prefix=$PREFIX && \
@@ -73,7 +73,7 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.76.0
+ENV RUST_VERSION=1.77.1
 
 ENV RUSTUP_VER=1.26.0
 
