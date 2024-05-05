@@ -51,8 +51,8 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
   cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3450200
-ENV SQLITE_SHA256="bc9067442eedf3dd39989b5c5cfbfff37ae66cc9c99274e0c3052dc4d4a8f6ae"
+ENV SQLITE_VER=3450300
+ENV SQLITE_SHA256="b2809ca53124c19c60f42bf627736eae011afdcc205bb48270a5ee9a38191531"
 RUN curl -sSL -O https://www.sqlite.org/2024/sqlite-autoconf-$SQLITE_VER.tar.gz && \
   echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
   tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
@@ -73,12 +73,12 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.77.2
+ENV RUST_VERSION=1.78.0
 
-ENV RUSTUP_VER=1.26.0
+ENV RUSTUP_VER=1.27.0
 
-ENV RUSTUP_AMD64_SHA256="0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db"
-ENV RUSTUP_ARM64_SHA256="673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800"
+ENV RUSTUP_AMD64_SHA256="a3d541a5484c8fa2f1c21478a6f6c505a778d473c21d60a18a4df5185d320ef8"
+ENV RUSTUP_ARM64_SHA256="76cd420cb8a82e540025c5f97bda3c65ceb0b0661d5843e6ef177479813b0367"
 
 COPY install.sh .
 RUN ./install.sh && rm -rf install.sh
