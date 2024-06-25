@@ -1,6 +1,6 @@
 ARG VARIANT=x86_64_musl
 
-FROM ghcr.io/chipp/build.musl.${VARIANT}:latest
+FROM ghcr.io/chipp/build.musl.${VARIANT}:musl_1.2.5_1
 
 # used in install.sh, provided by docker builder
 ARG TARGETARCH
