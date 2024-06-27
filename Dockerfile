@@ -84,4 +84,4 @@ COPY install.sh .
 RUN ./install.sh && rm -rf install.sh
 
 RUN echo "[build]\ntarget = \"$RUST_TARGET\"\n\n\
-  [target.$RUST_TARGET]\nlinker = \"$TARGET-gcc\"\n" > /root/.cargo/config
+  [target.$RUST_TARGET]\nlinker = \"$TARGET-gcc\"\n" > /root/.cargo/config.toml
