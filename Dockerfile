@@ -1,6 +1,6 @@
 ARG VARIANT=x86_64_musl
 
-FROM ghcr.io/chipp/build.musl.${VARIANT}:musl_1.2.5_1
+FROM ghcr.io/chipp/build.musl.${VARIANT}:musl_1.2.5_2
 
 # used in install.sh, provided by docker builder
 ARG TARGETARCH
@@ -20,8 +20,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.2.1
-ENV SSL_SHA256="83c7329fe52c850677d75e5d0b0ca245309b97e8ecbcfdc1dfdc4ab9fac35b39"
+ENV SSL_VER=3.2.3
+ENV SSL_SHA256="52b5f1c6b8022bc5868c308c54fb77705e702d6c6f4594f99a0df216acf46239"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -36,8 +36,19 @@ RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
 
-ENV CURL_VER=8.7.1
-ENV CURL_SHA256="f91249c87f68ea00cf27c44fdfa5a78423e41e71b7d408e5901a9896d905c495"
+ENV LIBPSL_VER=0.21.5
+ENV LIBPSL_SHA256="1dcc9ceae8b128f3c0b3f654decd0e1e891afc6ff81098f227ef260449dae208"
+RUN curl -sSL -O https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL_VER}/libpsl-${LIBPSL_VER}.tar.gz && \
+  echo "$LIBPSL_SHA256  libpsl-$LIBPSL_VER.tar.gz" | sha256sum -c - && \
+  tar xfz libpsl-${LIBPSL_VER}.tar.gz && cd libpsl-$LIBPSL_VER && \
+  CC="$CC -fPIC -pie" LIBS="-ldl ${ADDITIONAL_LIBS}" \
+  ./configure --prefix=$PREFIX \
+  --disable-shared --disable-man --enable-builtin --host=$TARGET && \
+  make -j$(nproc) && make install && \
+  cd .. && rm -rf libpsl-$LIBPSL_VER libpsl-$LIBPSL_VER.tar.gz
+
+ENV CURL_VER=8.10.1
+ENV CURL_SHA256="d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
   tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
@@ -51,8 +62,8 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
   cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3450300
-ENV SQLITE_SHA256="b2809ca53124c19c60f42bf627736eae011afdcc205bb48270a5ee9a38191531"
+ENV SQLITE_VER=3470000
+ENV SQLITE_SHA256="83eb21a6f6a649f506df8bd3aab85a08f7556ceed5dbd8dea743ea003fc3a957"
 RUN curl -sSL -O https://www.sqlite.org/2024/sqlite-autoconf-$SQLITE_VER.tar.gz && \
   echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
   tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
@@ -73,7 +84,7 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.81.0
+ENV RUST_VERSION=1.82.0
 
 ENV RUSTUP_VER=1.27.1
 

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := tag
 
-checksums: zlib ssl curl sqlite rustup_amd rustup_arm
+checksums: zlib ssl libpsl curl sqlite rustup_amd rustup_arm
 
 zlib: ZLIB_VER=$(shell cat Dockerfile | grep "ENV ZLIB_VER" | sed -e 's,ENV ZLIB_VER=\(.*\),\1,' | tr -d '\n')
 zlib: ZLIB_SHA256=$(shell curl -sSL https://zlib.net/zlib-$(ZLIB_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
@@ -13,6 +13,12 @@ ssl: SSL_SHA256=$(shell curl -sSL https://www.openssl.org/source/openssl-$(SSL_V
 ssl:
 	@sed -i '' "s/ENV SSL_SHA256=\"[0-9,a-f]*\"/ENV SSL_SHA256=\"$(SSL_SHA256)\"/g" ./Dockerfile
 	@echo "ssl $(SSL_VER) $(SSL_SHA256)"
+
+libpsl: LIBPSL_VER=$(shell cat Dockerfile | grep "ENV LIBPSL_VER" | sed -e 's,ENV LIBPSL_VER=\(.*\),\1,' | tr -d '\n')
+libpsl: LIBPSL_SHA256=$(shell curl -sSL https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL_VER}/libpsl-${LIBPSL_VER}.tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
+libpsl:
+	@sed -i '' "s/ENV LIBPSL_SHA256=\"[0-9,a-f]*\"/ENV LIBPSL_SHA256=\"$(LIBPSL_SHA256)\"/g" ./Dockerfile
+	@echo "libpsl $(LIBPSL_VER) $(LIBPSL_SHA256)"
 
 curl: CURL_VER=$(shell cat Dockerfile | grep "ENV CURL_VER" | sed -e 's,ENV CURL_VER=\(.*\),\1,' | tr -d '\n')
 curl: CURL_SHA256=$(shell curl -sSL https://curl.haxx.se/download/curl-$(CURL_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
@@ -45,46 +51,47 @@ tag:
 	git push origin $(RUST_VERSION)_$(NEXT_REVISION)
 
 test_x86_64:
-	DOCKER_BUILDKIT=0 docker build . \
+	docker build . \
+		--load \
 		--build-arg VARIANT=x86_64_musl \
 		--build-arg RUST_TARGET=x86_64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-x86_64 \
-		--build-arg OPENSSL_CFLAGS="" \
-		--build-arg ADDITIONAL_LIBS="" \
 		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
-	DOCKER_BUILDKIT=0 docker build validate \
+	docker build validate \
+		--load \
 		--build-arg VARIANT=x86_64_musl \
-		--no-cache \
 		--tag ghcr.io/chipp/build.rust.x86_64_musl.validate:test
-	docker rmi ghcr.io/chipp/build.rust.x86_64_musl.validate:test
+	docker rmi ghcr.io/chipp/build.rust.x86_64_musl.validate:test ghcr.io/chipp/build.rust.x86_64_musl:test
 
 test_armv7:
-	DOCKER_BUILDKIT=0 docker build . \
+	docker build . \
+		--load \
 		--build-arg VARIANT=armv7_musl \
 		--build-arg RUST_TARGET=armv7-unknown-linux-musleabihf \
 		--build-arg OPENSSL_ARCH=linux-armv4 \
 		--build-arg OPENSSL_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16" \
 		--build-arg ADDITIONAL_LIBS="-latomic" \
 		--tag ghcr.io/chipp/build.rust.armv7_musl:test
-	DOCKER_BUILDKIT=0 docker build validate \
+	docker build validate \
+		--load \
 		--build-arg VARIANT=armv7_musl \
-		--no-cache \
 		--tag ghcr.io/chipp/build.rust.armv7_musl.validate:test
-	docker rmi ghcr.io/chipp/build.rust.armv7_musl:test
+	docker rmi ghcr.io/chipp/build.rust.armv7_musl.validate:test ghcr.io/chipp/build.rust.armv7_musl:test 
 
 test_arm64:
-	DOCKER_BUILDKIT=0 docker build . \
+	docker build . \
+		--load \
 		--build-arg VARIANT=arm64_musl \
 		--build-arg RUST_TARGET=aarch64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-aarch64 \
-		--build-arg OPENSSL_CFLAGS="" \
-		--build-arg ADDITIONAL_LIBS="" \
 		--tag ghcr.io/chipp/build.rust.arm64_musl:test
-	DOCKER_BUILDKIT=0 docker build validate \
+	docker build validate \
+		--load \
 		--build-arg VARIANT=arm64_musl \
-		--no-cache \
 		--tag ghcr.io/chipp/build.rust.arm64_musl.validate:test
-	docker rmi ghcr.io/chipp/build.rust.arm64_musl.validate:test
+	docker rmi ghcr.io/chipp/build.rust.arm64_musl.validate:test ghcr.io/chipp/build.rust.arm64_musl:test
+
+test: test_x86_64 test_armv7 test_arm64
 
 release_x86_64: VERSION=$(shell git tag --sort=committerdate | tail -1 | tr -d '\n')
 release_x86_64: RUST_VERSION=$(shell printf $(VERSION) | sed -e 's,\(.*\)_.*,\1,')
