@@ -44,8 +44,8 @@ jobs:
           IMAGE_ID=ghcr.io/chipp/build.rust.${{ matrix.variant }}
 
           RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
-          NEXT_REVISION=$(echo $$(( $(shell git tag -l | grep $(RUST_VERSION) | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,') + 1 )))
-          FULL_REVISION=$(RUST_VERSION)_$(NEXT_REVISION)
+          LAST_REVISION=$(git tag -l | grep $RUST_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${RUST_VERSION}_$((LAST_REVISION+1))
 
           echo IMAGE_ID=$IMAGE_ID
           echo RUST_VERSION=$RUST_VERSION
@@ -69,8 +69,8 @@ jobs:
       - name: Create a tag
         run: |
           RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
-          NEXT_REVISION=$(echo $$(( $(shell git tag -l | grep $(RUST_VERSION) | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,') + 1 )))
-          FULL_REVISION=$(RUST_VERSION)_$(NEXT_REVISION)
+          LAST_REVISION=$(git tag -l | grep $RUST_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${RUST_VERSION}_$((LAST_REVISION+1))
 
           git tag $(FULL_REVISION) HEAD
           git push origin $(FULL_REVISION)
