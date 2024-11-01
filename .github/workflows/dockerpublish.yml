@@ -2,13 +2,12 @@ name: Docker
 
 on:
   push:
-    tags:
-       - '*'
+    branches:
+      - main
 
 jobs:
   push:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     strategy:
       matrix:
@@ -44,12 +43,13 @@ jobs:
         run: |
           IMAGE_ID=ghcr.io/chipp/build.rust.${{ matrix.variant }}
 
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          RUST_RELEASE=$(echo $VERSION | sed -e 's,\(.*\)_.*,\1,')
+          RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
+          NEXT_REVISION=$(echo $$(( $(shell git tag -l | grep $(RUST_VERSION) | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,') + 1 )))
+          FULL_REVISION=$(RUST_VERSION)_$(NEXT_REVISION)
 
           echo IMAGE_ID=$IMAGE_ID
-          echo RUST_RELEASE=$RUST_RELEASE
-          echo VERSION=$VERSION
+          echo RUST_VERSION=$RUST_VERSION
+          echo FULL_REVISION=$FULL_REVISION
 
           docker buildx build . \
              --push \
@@ -60,8 +60,17 @@ jobs:
              --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              --platform linux/amd64,linux/arm64 \
-             --tag $IMAGE_ID:$VERSION \
-             --tag $IMAGE_ID:$RUST_RELEASE \
+             --tag $IMAGE_ID:$RUST_VERSION \
+             --tag $IMAGE_ID:$FULL_REVISION \
              --tag $IMAGE_ID:latest \
              --cache-from=type=registry,ref=$IMAGE_ID:cache \
              --cache-to=type=registry,ref=$IMAGE_ID:cache,mode=max
+
+      - name: Create a tag
+        run: |
+          RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
+          NEXT_REVISION=$(echo $$(( $(shell git tag -l | grep $(RUST_VERSION) | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,') + 1 )))
+          FULL_REVISION=$(RUST_VERSION)_$(NEXT_REVISION)
+
+          git tag $(FULL_REVISION) HEAD
+          git push origin $(FULL_REVISION)
