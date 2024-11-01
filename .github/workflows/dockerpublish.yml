@@ -72,5 +72,5 @@ jobs:
           LAST_REVISION=$(git ls-remote --tags origin | grep $RUST_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
           FULL_REVISION=${RUST_VERSION}_$((LAST_REVISION+1))
 
-          git tag $(FULL_REVISION) HEAD
-          git push origin $(FULL_REVISION)
+          git tag $FULL_REVISION HEAD
+          git push origin $FULL_REVISION
