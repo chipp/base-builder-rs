@@ -16,8 +16,6 @@ jobs:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
             openssl_arch: linux-x86_64
-            openssl_cflags:
-            additional_libs:
           - variant: armv7_musl
             target: armv7-unknown-linux-musleabihf
             openssl_arch: linux-armv4
@@ -26,8 +24,6 @@ jobs:
           - variant: arm64_musl
             target: aarch64-unknown-linux-musl
             openssl_arch: linux-aarch64
-            openssl_cflags:
-            additional_libs:
 
     steps:
       - uses: actions/checkout@v2
@@ -37,7 +33,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push image
         run: |
@@ -53,18 +49,26 @@ jobs:
 
           docker buildx build . \
              --push \
+             --platform linux/amd64,linux/arm64 \
+             --cache-from=type=gha,scope=${{ matrix.variant }}-amd64 \
+             --cache-from=type=gha,scope=${{ matrix.variant }}-arm64 \
              --build-arg VARIANT="${{ matrix.variant }}" \
              --build-arg RUST_TARGET="${{ matrix.target }}" \
              --build-arg OPENSSL_ARCH="${{ matrix.openssl_arch }}" \
              --build-arg OPENSSL_CFLAGS="${{ matrix.openssl_cflags }}" \
              --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-             --platform linux/amd64,linux/arm64 \
              --tag $IMAGE_ID:$RUST_VERSION \
              --tag $IMAGE_ID:$FULL_REVISION \
-             --tag $IMAGE_ID:latest \
-             --cache-from=type=registry,ref=$IMAGE_ID:cache \
-             --cache-to=type=registry,ref=$IMAGE_ID:cache,mode=max
+             --tag $IMAGE_ID:latest
+
+          docker buildx build . \
+            --cache-from=type=gha,scope=${{ matrix.variant }}-amd64 \
+            --cache-to=type=gha,scope=${{ matrix.variant }}-amd64,mode=max
+
+          docker buildx build . \
+            --cache-from=type=gha,scope=${{ matrix.variant }}-arm64 \
+            --cache-to=type=gha,scope=${{ matrix.variant }}-arm64,mode=max
 
   create-tag:
     runs-on: ubuntu-latest
@@ -84,4 +88,3 @@ jobs:
 
           git tag $FULL_REVISION HEAD
           git push origin $FULL_REVISION
-

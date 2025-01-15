@@ -1,6 +1,4 @@
-ARG VARIANT=x86_64_musl
-
-FROM ghcr.io/chipp/build.rust.${VARIANT}:test AS builder
+FROM base-builder-rs
 
 WORKDIR /home/rust/src
 COPY ./Cargo.lock ./Cargo.lock
