@@ -97,7 +97,6 @@ jobs:
           docker buildx imagetools create \
              --tag $IMAGE_ID:$FULL_REVISION \
              --tag $IMAGE_ID:latest \
-             --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              $IMAGE_ID:$FULL_REVISION-linux-amd64 \
              $IMAGE_ID:$FULL_REVISION-linux-arm64
 
