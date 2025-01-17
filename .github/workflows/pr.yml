@@ -7,11 +7,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
+        host: [arm64, amd64]
         include:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
@@ -24,6 +23,12 @@ jobs:
           - variant: arm64_musl
             target: aarch64-unknown-linux-musl
             openssl_arch: linux-aarch64
+          - host: arm64
+            os: ubuntu-24.04-arm
+          - host: amd64
+            os: ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -41,8 +46,8 @@ jobs:
 
           docker buildx build . \
             --output type=oci,tar=false,dest=local \
-            --cache-from=type=gha,scope=${{ matrix.variant }}-amd64 \
-            --cache-to=type=gha,scope=${{ matrix.variant }}-amd64,mode=max \
+            --cache-from=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }} \
+            --cache-to=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }},mode=max \
             --build-arg VARIANT="${{ matrix.variant }}" \
             --build-arg RUST_TARGET="${{ matrix.target }}" \
             --build-arg OPENSSL_ARCH="${{ matrix.openssl_arch }}" \

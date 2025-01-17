@@ -1,4 +1,4 @@
-name: Docker
+name: Publish
 
 on:
   push:
@@ -6,12 +6,11 @@ on:
       - main
 
 jobs:
-  push:
-    runs-on: ubuntu-latest
-
+  build-platforms:
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
+        host: [arm64, amd64]
         include:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
@@ -24,6 +23,12 @@ jobs:
           - variant: arm64_musl
             target: aarch64-unknown-linux-musl
             openssl_arch: linux-aarch64
+          - host: arm64
+            os: ubuntu-24.04-arm
+          - host: amd64
+            os: ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -49,30 +54,56 @@ jobs:
 
           docker buildx build . \
              --push \
-             --platform linux/amd64,linux/arm64 \
-             --cache-from=type=gha,scope=${{ matrix.variant }}-amd64 \
-             --cache-from=type=gha,scope=${{ matrix.variant }}-arm64 \
+             --platform linux/${{ matrix.host }} \
+             --cache-from=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }} \
+             --cache-to=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }},mode=max \
              --build-arg VARIANT="${{ matrix.variant }}" \
              --build-arg RUST_TARGET="${{ matrix.target }}" \
              --build-arg OPENSSL_ARCH="${{ matrix.openssl_arch }}" \
              --build-arg OPENSSL_CFLAGS="${{ matrix.openssl_cflags }}" \
              --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-             --tag $IMAGE_ID:$RUST_VERSION \
+             --tag $IMAGE_ID:$FULL_REVISION-linux-${{ matrix.host }}
+
+  merge-multi-arch:
+    runs-on: ubuntu-24.04-arm
+    needs: build-platforms
+    strategy:
+      matrix:
+        variant: [x86_64_musl, armv7_musl, arm64_musl]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Merge and push
+        run: |
+          IMAGE_ID=ghcr.io/chipp/build.rust.${{ matrix.variant }}
+
+          RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $RUST_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${RUST_VERSION}_$((LAST_REVISION+1))
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo RUST_VERSION=$RUST_VERSION
+          echo FULL_REVISION=$FULL_REVISION
+
+          docker buildx imagetools create \
              --tag $IMAGE_ID:$FULL_REVISION \
-             --tag $IMAGE_ID:latest
-
-          docker buildx build . \
-            --cache-from=type=gha,scope=${{ matrix.variant }}-amd64 \
-            --cache-to=type=gha,scope=${{ matrix.variant }}-amd64,mode=max
-
-          docker buildx build . \
-            --cache-from=type=gha,scope=${{ matrix.variant }}-arm64 \
-            --cache-to=type=gha,scope=${{ matrix.variant }}-arm64,mode=max
+             --tag $IMAGE_ID:latest \
+             --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+             $IMAGE_ID:$FULL_REVISION-linux-amd64 \
+             $IMAGE_ID:$FULL_REVISION-linux-arm64
 
   create-tag:
-    runs-on: ubuntu-latest
-    needs: push
+    runs-on: ubuntu-24.04-arm
+    needs: merge-multi-arch
 
     steps:
       - uses: actions/checkout@v2
