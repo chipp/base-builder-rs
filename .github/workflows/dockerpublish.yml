@@ -18,7 +18,7 @@ jobs:
           - variant: armv7_musl
             target: armv7-unknown-linux-musleabihf
             openssl_arch: linux-armv4
-            openssl_cflags: "-march=armv7-a -mfpu=vfpv3-d16"
+            additional_cflags: "-march=armv7-a -mfpu=vfpv3-d16"
             additional_libs: -latomic
           - variant: arm64_musl
             target: aarch64-unknown-linux-musl
@@ -60,7 +60,7 @@ jobs:
              --build-arg VARIANT="${{ matrix.variant }}" \
              --build-arg RUST_TARGET="${{ matrix.target }}" \
              --build-arg OPENSSL_ARCH="${{ matrix.openssl_arch }}" \
-             --build-arg OPENSSL_CFLAGS="${{ matrix.openssl_cflags }}" \
+             --build-arg ADDITIONAL_CFLAGS="${{ matrix.additional_cflags }}" \
              --build-arg ADDITIONAL_LIBS="${{ matrix.additional_libs }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              --tag $IMAGE_ID:$FULL_REVISION-linux-${{ matrix.host }}

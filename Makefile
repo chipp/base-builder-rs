@@ -27,7 +27,7 @@ curl:
 	@echo "curl $(CURL_VER) $(CURL_SHA256)"
 
 sqlite: SQLITE_VER=$(shell cat Dockerfile | grep "ENV SQLITE_VER" | sed -e 's,ENV SQLITE_VER=\(.*\),\1,' | tr -d '\n')
-sqlite: SQLITE_SHA256=$(shell curl -sSL https://www.sqlite.org/2024/sqlite-autoconf-$(SQLITE_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
+sqlite: SQLITE_SHA256=$(shell curl -sSL https://www.sqlite.org/2025/sqlite-autoconf-$(SQLITE_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
 sqlite:
 	@sed -i '' "s/ENV SQLITE_SHA256=\"[0-9,a-f]*\"/ENV SQLITE_SHA256=\"$(SQLITE_SHA256)\"/g" ./Dockerfile
 	@echo "sqlite $(SQLITE_VER) $(SQLITE_SHA256)"
@@ -59,7 +59,7 @@ test_x86_64:
 		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
 	docker build validate \
 		--load \
-		--build-arg VARIANT=x86_64_musl \
+		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.x86_64_musl:test \
 		--tag ghcr.io/chipp/build.rust.x86_64_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.x86_64_musl.validate:test ghcr.io/chipp/build.rust.x86_64_musl:test
 
@@ -69,12 +69,12 @@ test_armv7:
 		--build-arg VARIANT=armv7_musl \
 		--build-arg RUST_TARGET=armv7-unknown-linux-musleabihf \
 		--build-arg OPENSSL_ARCH=linux-armv4 \
-		--build-arg OPENSSL_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16" \
+		--build-arg ADDITIONAL_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16" \
 		--build-arg ADDITIONAL_LIBS="-latomic" \
 		--tag ghcr.io/chipp/build.rust.armv7_musl:test
 	docker build validate \
 		--load \
-		--build-arg VARIANT=armv7_musl \
+		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.armv7_musl:test \
 		--tag ghcr.io/chipp/build.rust.armv7_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.armv7_musl.validate:test ghcr.io/chipp/build.rust.armv7_musl:test 
 
@@ -85,9 +85,9 @@ test_arm64:
 		--build-arg RUST_TARGET=aarch64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-aarch64 \
 		--tag ghcr.io/chipp/build.rust.arm64_musl:test
-	docker build validate \
+	docker buildx build validate \
 		--load \
-		--build-arg VARIANT=arm64_musl \
+		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.arm64_musl:test \
 		--tag ghcr.io/chipp/build.rust.arm64_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.arm64_musl.validate:test ghcr.io/chipp/build.rust.arm64_musl:test
 
