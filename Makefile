@@ -27,7 +27,7 @@ curl:
 	@echo "curl $(CURL_VER) $(CURL_SHA256)"
 
 sqlite: SQLITE_VER=$(shell cat Dockerfile | grep "ENV SQLITE_VER" | sed -e 's,ENV SQLITE_VER=\(.*\),\1,' | tr -d '\n')
-sqlite: SQLITE_SHA256=$(shell curl -sSL https://www.sqlite.org/2024/sqlite-autoconf-$(SQLITE_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
+sqlite: SQLITE_SHA256=$(shell curl -sSL https://www.sqlite.org/2025/sqlite-autoconf-$(SQLITE_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
 sqlite:
 	@sed -i '' "s/ENV SQLITE_SHA256=\"[0-9,a-f]*\"/ENV SQLITE_SHA256=\"$(SQLITE_SHA256)\"/g" ./Dockerfile
 	@echo "sqlite $(SQLITE_VER) $(SQLITE_SHA256)"

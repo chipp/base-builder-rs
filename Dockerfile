@@ -47,8 +47,8 @@ RUN curl -sSL -O https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL
     make -j$(nproc) && make install && \
     cd .. && rm -rf libpsl-$LIBPSL_VER libpsl-$LIBPSL_VER.tar.gz
 
-ENV CURL_VER=8.10.1
-ENV CURL_SHA256="d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
+ENV CURL_VER=8.11.1
+ENV CURL_SHA256="a889ac9dbba3644271bd9d1302b5c22a088893719b72be3487bc3d401e5c4e80"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
     tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
@@ -62,9 +62,9 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
     cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3470000
-ENV SQLITE_SHA256="83eb21a6f6a649f506df8bd3aab85a08f7556ceed5dbd8dea743ea003fc3a957"
-RUN curl -sSL -O https://www.sqlite.org/2024/sqlite-autoconf-$SQLITE_VER.tar.gz && \
+ENV SQLITE_VER=3480000
+ENV SQLITE_SHA256="ac992f7fca3989de7ed1fe99c16363f848794c8c32a158dafd4eb927a2e02fd5"
+RUN curl -sSL -O https://www.sqlite.org/2025/sqlite-autoconf-$SQLITE_VER.tar.gz && \
     echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
     tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
     CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS $ADDITIONAL_LIBS" ./configure --enable-shared=no --host $TARGET --prefix=$PREFIX && \
