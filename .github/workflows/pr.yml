@@ -15,14 +15,23 @@ jobs:
           - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
             openssl_arch: linux-x86_64
+            test_platform: linux/amd64
+            qemu_platform: amd64
+            platform_prefix: amd64
           - variant: armv7_musl
             target: armv7-unknown-linux-musleabihf
             openssl_arch: linux-armv4
             additional_cflags: "-march=armv7-a -mfpu=vfpv3-d16"
             additional_libs: -latomic
+            test_platform: linux/arm/v7
+            qemu_platform: arm
+            platform_prefix: arm32v7
           - variant: arm64_musl
             target: aarch64-unknown-linux-musl
             openssl_arch: linux-aarch64
+            test_platform: linux/arm64
+            qemu_platform: arm64
+            platform_prefix: arm64v8
           - host: arm64
             os: ubuntu-24.04-arm
           - host: amd64
@@ -39,6 +48,14 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.qemu_platform }}
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v1
 
       - name: Test
         run: |
@@ -57,6 +74,8 @@ jobs:
 
           docker buildx build validate \
             --load \
+            --platform ${{ matrix.test_platform }} \
             --build-context base-builder-rs=oci-layout://local:test \
+            --build-context emulator=docker-image://${{ matrix.platform_prefix }}/alpine \
             --no-cache \
             --tag $IMAGE_ID:validate

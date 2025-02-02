@@ -59,7 +59,9 @@ test_x86_64:
 		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
 	docker build validate \
 		--load \
+		--platform linux/amd64 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.x86_64_musl:test \
+		--build-context emulator=docker-image://amd64/alpine \
 		--tag ghcr.io/chipp/build.rust.x86_64_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.x86_64_musl.validate:test ghcr.io/chipp/build.rust.x86_64_musl:test
 
@@ -74,7 +76,9 @@ test_armv7:
 		--tag ghcr.io/chipp/build.rust.armv7_musl:test
 	docker build validate \
 		--load \
+		--platform linux/arm/v7 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.armv7_musl:test \
+		--build-context emulator=docker-image://arm32v7/alpine \
 		--tag ghcr.io/chipp/build.rust.armv7_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.armv7_musl.validate:test ghcr.io/chipp/build.rust.armv7_musl:test 
 
@@ -87,7 +91,9 @@ test_arm64:
 		--tag ghcr.io/chipp/build.rust.arm64_musl:test
 	docker buildx build validate \
 		--load \
+		--platform linux/arm64 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.arm64_musl:test \
+		--build-context emulator=docker-image://arm64v8/alpine \
 		--tag ghcr.io/chipp/build.rust.arm64_musl.validate:test
 	docker rmi ghcr.io/chipp/build.rust.arm64_musl.validate:test ghcr.io/chipp/build.rust.arm64_musl:test
 
