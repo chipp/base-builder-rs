@@ -10,6 +10,11 @@ ARG OPENSSL_ARCH=linux-x86_64
 ARG ADDITIONAL_CFLAGS
 ARG ADDITIONAL_LIBS
 
+RUN apt-get update && apt-get install -y \
+    tcl-dev \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV ZLIB_VER=1.3.1
 ENV ZLIB_SHA256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
 RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
@@ -20,8 +25,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
     make -j$(nproc) && make install && \
     cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.2.3
-ENV SSL_SHA256="52b5f1c6b8022bc5868c308c54fb77705e702d6c6f4594f99a0df216acf46239"
+ENV SSL_VER=3.5.0
+ENV SSL_SHA256="344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
     echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
     tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -47,8 +52,8 @@ RUN curl -sSL -O https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL
     make -j$(nproc) && make install && \
     cd .. && rm -rf libpsl-$LIBPSL_VER libpsl-$LIBPSL_VER.tar.gz
 
-ENV CURL_VER=8.11.1
-ENV CURL_SHA256="a889ac9dbba3644271bd9d1302b5c22a088893719b72be3487bc3d401e5c4e80"
+ENV CURL_VER=8.13.0
+ENV CURL_SHA256="c261a4db579b289a7501565497658bbd52d3138fdbaccf1490fa918129ab45bc"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
     tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
@@ -62,14 +67,16 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
     cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3480000
-ENV SQLITE_SHA256="ac992f7fca3989de7ed1fe99c16363f848794c8c32a158dafd4eb927a2e02fd5"
+ENV SQLITE_VER=3490100
+ENV SQLITE_SHA256="106642d8ccb36c5f7323b64e4152e9b719f7c0215acf5bfeac3d5e7f97b59254"
 RUN curl -sSL -O https://www.sqlite.org/2025/sqlite-autoconf-$SQLITE_VER.tar.gz && \
     echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
-    tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
-    CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS $ADDITIONAL_LIBS" ./configure --enable-shared=no --host $TARGET --prefix=$PREFIX && \
+    tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && \
+    mkdir -p sqlite-autoconf-$SQLITE_VER/build && cd sqlite-autoconf-$SQLITE_VER/build && \
+    CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS $ADDITIONAL_LIBS" ../configure --disable-shared \
+    --host=$TARGET --prefix=$PREFIX && \
     make -j$(nproc) && make install && \
-    cd .. && rm -rf sqlite-autoconf-$SQLITE_VER sqlite-autoconf-$SQLITE_VER.tar.gz
+    cd ../.. && rm -rf sqlite-autoconf-$SQLITE_VER sqlite-autoconf-$SQLITE_VER.tar.gz
 
 ENV OPENSSL_STATIC=1 \
     OPENSSL_DIR=$PREFIX \
@@ -84,10 +91,10 @@ ENV OPENSSL_STATIC=1 \
 ENV PATH=/root/.cargo/bin:$PATH
 
 ENV RUST_VERSION=1.86.0
-ENV RUSTUP_VER=1.27.1
+ENV RUSTUP_VER=1.28.1
 
-ENV RUSTUP_AMD64_SHA256="6aeece6993e902708983b209d04c0d1dbb14ebb405ddb87def578d41f920f56d"
-ENV RUSTUP_ARM64_SHA256="1cffbf51e63e634c746f741de50649bbbcbd9dbe1de363c9ecef64e278dba2b2"
+ENV RUSTUP_AMD64_SHA256="a3339fb004c3d0bb9862ba0bce001861fe5cbde9c10d16591eb3f39ee6cd3e7f"
+ENV RUSTUP_ARM64_SHA256="c64b33db2c6b9385817ec0e49a84bcfe018ed6e328fe755c3c809580cc70ce7a"
 
 COPY install.sh .
 RUN ./install.sh && rm -rf install.sh

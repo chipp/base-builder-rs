@@ -51,13 +51,13 @@ tag:
 	git push origin $(RUST_VERSION)_$(NEXT_REVISION)
 
 test_x86_64:
-	docker build . \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build . \
 		--load \
 		--build-arg VARIANT=x86_64_musl \
 		--build-arg RUST_TARGET=x86_64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-x86_64 \
 		--tag ghcr.io/chipp/build.rust.x86_64_musl:test
-	docker build validate \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build validate \
 		--load \
 		--platform linux/amd64 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.x86_64_musl:test \
@@ -66,7 +66,7 @@ test_x86_64:
 	docker rmi ghcr.io/chipp/build.rust.x86_64_musl.validate:test ghcr.io/chipp/build.rust.x86_64_musl:test
 
 test_armv7:
-	docker build . \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build . \
 		--load \
 		--build-arg VARIANT=armv7_musl \
 		--build-arg RUST_TARGET=armv7-unknown-linux-musleabihf \
@@ -74,7 +74,7 @@ test_armv7:
 		--build-arg ADDITIONAL_CFLAGS="-march=armv7-a -mfpu=vfpv3-d16" \
 		--build-arg ADDITIONAL_LIBS="-latomic" \
 		--tag ghcr.io/chipp/build.rust.armv7_musl:test
-	docker build validate \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build validate \
 		--load \
 		--platform linux/arm/v7 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.armv7_musl:test \
@@ -83,13 +83,13 @@ test_armv7:
 	docker rmi ghcr.io/chipp/build.rust.armv7_musl.validate:test ghcr.io/chipp/build.rust.armv7_musl:test 
 
 test_arm64:
-	docker build . \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build . \
 		--load \
 		--build-arg VARIANT=arm64_musl \
 		--build-arg RUST_TARGET=aarch64-unknown-linux-musl \
 		--build-arg OPENSSL_ARCH=linux-aarch64 \
 		--tag ghcr.io/chipp/build.rust.arm64_musl:test
-	docker buildx build validate \
+	BUILDX_EXPERIMENTAL=1 docker buildx debug build validate \
 		--load \
 		--platform linux/arm64 \
 		--build-context base-builder-rs=docker-image://ghcr.io/chipp/build.rust.arm64_musl:test \
