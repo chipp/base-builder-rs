@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - main
-  issue_comment:
-    types: [created]
+  repository_dispatch:
+    types: [run-tests]
 
 permissions:
   pull-requests: read
@@ -14,14 +14,10 @@ permissions:
 
 jobs:
   test:
-    # Run on PR events or when /test is commented on a PR
+    # Run on PR events or when triggered via repository_dispatch
     if: >-
       github.event_name == 'pull_request' ||
-      (
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request != null &&
-        contains(github.event.comment.body, '/test')
-      )
+      github.event_name == 'repository_dispatch'
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
@@ -55,13 +51,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Get PR branch for issue_comment events
-        if: github.event_name == 'issue_comment'
+      - name: Get PR branch for repository_dispatch events
+        if: github.event_name == 'repository_dispatch'
         id: pr_branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_NUMBER=${{ github.event.issue.number }}
+          PR_NUMBER=${{ github.event.client_payload.pr_number }}
+          if [ -z "$PR_NUMBER" ]; then
+            echo "pr_number not provided in client_payload"
+            exit 1
+          fi
           PR_INFO=$(gh pr view $PR_NUMBER --repo "${{ github.repository }}" --json headRefName,headRepository,headRepositoryOwner)
           HEAD_REF=$(echo "$PR_INFO" | jq -r '.headRefName')
           HEAD_REPO_OWNER=$(echo "$PR_INFO" | jq -r '.headRepositoryOwner.login')
@@ -70,8 +70,8 @@ jobs:
           echo "ref=$HEAD_REF" >> $GITHUB_OUTPUT
           echo "repo=$HEAD_REPO" >> $GITHUB_OUTPUT
 
-      - name: Checkout PR for issue_comment events
-        if: github.event_name == 'issue_comment'
+      - name: Checkout PR for repository_dispatch events
+        if: github.event_name == 'repository_dispatch'
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr_branch.outputs.ref }}
