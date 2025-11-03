@@ -97,9 +97,11 @@ jobs:
           PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
           
           if [ -n "$PR_NUMBER" ]; then
-            echo "Triggering test workflow for PR #$PR_NUMBER by posting a comment"
-            
-            # Post a comment to trigger the CI build
-            gh pr comment "$PR_NUMBER" --body "/test"
-          fi
+            echo "Triggering test workflow for PR #$PR_NUMBER via repository_dispatch"
 
+            gh api repos/${{ github.repository }}/dispatches \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              -f event_type=run-tests \
+              -F client_payload[pr_number]=$PR_NUMBER
+          fi
