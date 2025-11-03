@@ -1,0 +1,82 @@
+name: Check Rust Version
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-24.04-arm
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest Rust version
+        id: get_latest_version
+        run: |
+          LATEST_VERSION=$(curl -sSq https://static.rust-lang.org/dist/channel-rust-stable.toml | sed -n -e "/^\[pkg.rust\]/,/^\[/p" | sed '$d' | grep "^version" | cut -d "=" -f2- | tr -d '"' | sed -e 's,[[:space:]]*\(1\.[[:digit:]]*\.[[:digit:]]\).*,\1,' | tr -d '\n')
+          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest Rust version: $LATEST_VERSION"
+
+      - name: Get current Rust version
+        id: get_current_version
+        run: |
+          CURRENT_VERSION=$(grep "^ENV RUST_VERSION" Dockerfile | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current Rust version: $CURRENT_VERSION"
+
+      - name: Check if update is needed
+        id: check_update
+        run: |
+          if [ "${{ steps.get_latest_version.outputs.latest_version }}" != "${{ steps.get_current_version.outputs.current_version }}" ]; then
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+            echo "Update needed: ${{ steps.get_current_version.outputs.current_version }} -> ${{ steps.get_latest_version.outputs.latest_version }}"
+          else
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+            echo "Already up to date: ${{ steps.get_current_version.outputs.current_version }}"
+          fi
+
+      - name: Create branch and update Dockerfile
+        if: steps.check_update.outputs.update_needed == 'true'
+        run: |
+          NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
+          BRANCH_NAME="update-rust-${NEW_VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "$BRANCH_NAME"
+          
+          # Update RUST_VERSION in Dockerfile
+          sed -i "s/^ENV RUST_VERSION=.*/ENV RUST_VERSION=${NEW_VERSION}/" Dockerfile
+          
+          git add Dockerfile
+          git commit -m "Update Rust to ${NEW_VERSION}"
+          
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        if: steps.check_update.outputs.update_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
+          BRANCH_NAME="update-rust-${NEW_VERSION}"
+          
+          gh pr create \
+            --title "Update Rust to ${NEW_VERSION}" \
+            --body "This PR updates Rust version to ${NEW_VERSION}." \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --assignee chipp
+
