@@ -4,9 +4,23 @@ on:
   pull_request:
     branches:
       - main
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: read
+  contents: read
 
 jobs:
   test:
+    # Run on PR events or when /test is commented on a PR
+    if: >-
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        contains(github.event.comment.body, '/test')
+      )
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
@@ -40,7 +54,29 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Get PR branch for issue_comment events
+        if: github.event_name == 'issue_comment'
+        id: pr_branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          PR_INFO=$(gh pr view $PR_NUMBER --repo "${{ github.repository }}" --json headRefName,headRepository,headRepositoryOwner)
+          HEAD_REF=$(echo "$PR_INFO" | jq -r '.headRefName')
+          HEAD_REPO=$(echo "$PR_INFO" | jq -r '.headRepositoryOwner.login')/$(echo "$PR_INFO" | jq -r '.headRepository.name')
+          echo "ref=$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "repo=$HEAD_REPO" >> $GITHUB_OUTPUT
+
+      - name: Checkout PR for issue_comment events
+        if: github.event_name == 'issue_comment'
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.pr_branch.outputs.ref }}
+          repository: ${{ steps.pr_branch.outputs.repo }}
+
+      - name: Checkout for pull_request events
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v2
 
       - name: Log into registry
         run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
