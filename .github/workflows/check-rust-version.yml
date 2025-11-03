@@ -66,6 +66,7 @@ jobs:
           git push origin "$BRANCH_NAME"
 
       - name: Create Pull Request
+        id: create_pr
         if: steps.check_update.outputs.update_needed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,10 +74,32 @@ jobs:
           NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
           BRANCH_NAME="update-rust-${NEW_VERSION}"
           
-          gh pr create \
+          PR_OUTPUT=$(gh pr create \
             --title "Update Rust to ${NEW_VERSION}" \
             --body "This PR updates Rust version to ${NEW_VERSION}." \
             --base main \
             --head "$BRANCH_NAME" \
-            --assignee chipp
+            --assignee chipp)
+          
+          # Extract PR number from output
+          PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oP 'pull/\K\d+' || echo "")
+          PR_URL=$(echo "$PR_OUTPUT" | grep -oP 'https://github.com/[^\s]+' || echo "")
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "Created PR #$PR_NUMBER: $PR_URL"
+
+      - name: Trigger test workflow
+        if: steps.check_update.outputs.update_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
+          
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Triggering test workflow for PR #$PR_NUMBER by posting a comment"
+            
+            # Post a comment to trigger the CI build
+            gh pr comment "$PR_NUMBER" --body "/test"
+          fi
 
