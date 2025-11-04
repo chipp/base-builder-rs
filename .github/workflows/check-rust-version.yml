@@ -67,7 +67,7 @@ jobs:
         id: create_pr
         if: steps.check_update.outputs.update_needed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
           BRANCH_NAME="update-rust-${NEW_VERSION}"
@@ -90,13 +90,11 @@ jobs:
       - name: Trigger test workflow
         if: steps.check_update.outputs.update_needed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
-          NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
-          BRANCH_NAME="update-rust-${NEW_VERSION}"
           
           if [ -n "$PR_NUMBER" ]; then
             echo "Triggering test workflow for PR #$PR_NUMBER via workflow_dispatch"
-            gh workflow run pr.yml --ref "$BRANCH_NAME"
+            gh pr merge --auto "$PR_NUMBER"
           fi
