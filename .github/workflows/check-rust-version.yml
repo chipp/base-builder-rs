@@ -96,5 +96,5 @@ jobs:
           
           if [ -n "$PR_NUMBER" ]; then
             echo "Triggering test workflow for PR #$PR_NUMBER via workflow_dispatch"
-            gh pr merge --auto "$PR_NUMBER"
+            gh pr merge --auto --merge "$PR_NUMBER"
           fi
