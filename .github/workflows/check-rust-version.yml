@@ -13,13 +13,10 @@ permissions:
 jobs:
   check-version:
     runs-on: ubuntu-24.04-arm
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get latest Rust version
         id: get_latest_version
@@ -95,13 +92,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER="${{ steps.create_pr.outputs.pr_number }}"
+          NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
+          BRANCH_NAME="update-rust-${NEW_VERSION}"
           
           if [ -n "$PR_NUMBER" ]; then
-            echo "Triggering test workflow for PR #$PR_NUMBER via repository_dispatch"
-
-            gh api repos/${{ github.repository }}/dispatches \
-              --method POST \
-              -H "Accept: application/vnd.github+json" \
-              -f event_type=run-tests \
-              -F client_payload[pr_number]=$PR_NUMBER
+            echo "Triggering test workflow for PR #$PR_NUMBER via workflow_dispatch"
+            gh workflow run pr.yml --ref "$BRANCH_NAME"
           fi

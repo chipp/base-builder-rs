@@ -4,20 +4,10 @@ on:
   pull_request:
     branches:
       - main
-  repository_dispatch:
-    types: [run-tests]
-
-permissions:
-  pull-requests: read
-  contents: read
-  issues: read
+  workflow_dispatch
 
 jobs:
   test:
-    # Run on PR events or when triggered via repository_dispatch
-    if: >-
-      github.event_name == 'pull_request' ||
-      github.event_name == 'repository_dispatch'
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
@@ -51,35 +41,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Get PR branch for repository_dispatch events
-        if: github.event_name == 'repository_dispatch'
-        id: pr_branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=${{ github.event.client_payload.pr_number }}
-          if [ -z "$PR_NUMBER" ]; then
-            echo "pr_number not provided in client_payload"
-            exit 1
-          fi
-          PR_INFO=$(gh pr view $PR_NUMBER --repo "${{ github.repository }}" --json headRefName,headRepository,headRepositoryOwner)
-          HEAD_REF=$(echo "$PR_INFO" | jq -r '.headRefName')
-          HEAD_REPO_OWNER=$(echo "$PR_INFO" | jq -r '.headRepositoryOwner.login')
-          HEAD_REPO_NAME=$(echo "$PR_INFO" | jq -r '.headRepository.name')
-          HEAD_REPO="${HEAD_REPO_OWNER}/${HEAD_REPO_NAME}"
-          echo "ref=$HEAD_REF" >> $GITHUB_OUTPUT
-          echo "repo=$HEAD_REPO" >> $GITHUB_OUTPUT
-
-      - name: Checkout PR for repository_dispatch events
-        if: github.event_name == 'repository_dispatch'
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.pr_branch.outputs.ref }}
-          repository: ${{ steps.pr_branch.outputs.repo }}
-
-      - name: Checkout for pull_request events
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Log into registry
         run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
