@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-ENV ZLIB_VER=1.3.1
-ENV ZLIB_SHA256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+ENV ZLIB_VER=1.3.2
+ENV ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
     echo "$ZLIB_SHA256  zlib-$ZLIB_VER.tar.gz" | sha256sum -c - && \
     tar xfz zlib-${ZLIB_VER}.tar.gz && cd zlib-$ZLIB_VER && \
@@ -90,7 +90,7 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.93.1
+ENV RUST_VERSION=1.94.0
 ENV RUSTUP_VER=1.28.2
 
 ENV RUSTUP_AMD64_SHA256="20a06e644b0d9bd2fbdbfd52d42540bdde820ea7df86e92e533c073da0cdd43c"
