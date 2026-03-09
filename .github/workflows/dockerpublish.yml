@@ -110,9 +110,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log into registry
-        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
-
       - name: Create a tag
         run: |
           RUST_VERSION=$(cat Dockerfile | grep "ENV RUST_VERSION" | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
