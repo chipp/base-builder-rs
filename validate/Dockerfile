@@ -11,6 +11,8 @@ COPY ./Cargo.toml ./Cargo.toml
 
 COPY ./src ./src
 
+RUN cargo clippy --all-targets --all-features -- -D warnings
+
 RUN cargo test --no-run && \
     cp $(cargo test --no-run --message-format=json -q | tail -n 2 | head -n 1 | jq -r .executable) ./validate-test && \
     rm -rf target
