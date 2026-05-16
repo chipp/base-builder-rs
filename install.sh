@@ -23,3 +23,4 @@ chmod +x rustup-init
 rm rustup-init && echo "target: $RUST_TARGET"
 
 rustup target add $RUST_TARGET
+rustup component add clippy
