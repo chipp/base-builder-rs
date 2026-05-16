@@ -1,4 +1,5 @@
 #! /bin/bash
+set -ex
 
 case $TARGETARCH in
   "amd64")
@@ -23,4 +24,4 @@ chmod +x rustup-init
 rm rustup-init && echo "target: $RUST_TARGET"
 
 rustup target add $RUST_TARGET
-rustup component add clippy
+rustup component add clippy rust-analyzer
