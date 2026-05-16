@@ -29,7 +29,7 @@ jobs:
       - name: Get current Rust version
         id: get_current_version
         run: |
-          CURRENT_VERSION=$(grep "^ENV RUST_VERSION" Dockerfile | sed -e 's,ENV RUST_VERSION=\(.*\),\1,' | tr -d '\n')
+          CURRENT_VERSION=$(grep "^RUST_VERSION=" versions.env | sed -e 's,RUST_VERSION="\(.*\)",\1,' | tr -d '\n')
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current Rust version: $CURRENT_VERSION"
 
@@ -44,7 +44,7 @@ jobs:
             echo "Already up to date: ${{ steps.get_current_version.outputs.current_version }}"
           fi
 
-      - name: Create branch and update Dockerfile
+      - name: Create branch and update versions.env
         if: steps.check_update.outputs.update_needed == 'true'
         run: |
           NEW_VERSION="${{ steps.get_latest_version.outputs.latest_version }}"
@@ -55,10 +55,10 @@ jobs:
           
           git checkout -b "$BRANCH_NAME"
           
-          # Update RUST_VERSION in Dockerfile
-          sed -i "s/^ENV RUST_VERSION=.*/ENV RUST_VERSION=${NEW_VERSION}/" Dockerfile
+          # Update RUST_VERSION in versions.env
+          sed -i "s/^RUST_VERSION=.*/RUST_VERSION=\"${NEW_VERSION}\"/" versions.env
           
-          git add Dockerfile
+          git add versions.env
           git commit -m "Update Rust to ${NEW_VERSION}"
           
           git push origin "$BRANCH_NAME"

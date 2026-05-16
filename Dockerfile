@@ -15,68 +15,21 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-ENV ZLIB_VER=1.3.2
-ENV ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
-RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
-    echo "$ZLIB_SHA256  zlib-$ZLIB_VER.tar.gz" | sha256sum -c - && \
-    tar xfz zlib-${ZLIB_VER}.tar.gz && cd zlib-$ZLIB_VER && \
-    CC="$CC -fPIC -pie" LDFLAGS="-L$PREFIX/lib" CFLAGS="-I$PREFIX/include" \
-    ./configure --static --prefix=$PREFIX && \
-    make -j$(nproc) && make install && \
-    cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
+COPY versions.env /versions.env
+COPY scripts/ /scripts/
 
-ENV SSL_VER=3.5.6
-ENV SSL_SHA256="deae7c80cba99c4b4f940ecadb3c3338b13cb77418409238e57d7f31f2a3b736"
-RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
-    echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
-    tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
-    CC=gcc ./Configure --cross-compile-prefix=${TARGET}- \
-    --prefix=$PREFIX --openssldir=$PREFIX/ssl ${ADDITIONAL_LIBS} \
-    no-dso no-shared no-ssl3 no-tests no-comp no-zlib no-zlib-dynamic \
-    no-md2 no-rc5 no-weak-ssl-ciphers no-camellia no-idea no-seed \
-    no-engine no-async no-apps $OPENSSL_ARCH $ADDITIONAL_CFLAGS \
-    -fdata-sections -ffunction-sections -fPIC -O2 \
-    -DOPENSSL_NO_SECURE_MEMORY && \
-    env C_INCLUDE_PATH=$PREFIX/include make depend 2> /dev/null && \
-    make -j$(nproc) && make install_sw && \
-    cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
+ENV BASH_ENV=/versions.env
+SHELL ["/bin/bash", "-c"]
 
-ENV LIBPSL_VER=0.21.5
-ENV LIBPSL_SHA256="1dcc9ceae8b128f3c0b3f654decd0e1e891afc6ff81098f227ef260449dae208"
-RUN curl -sSL -O https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL_VER}/libpsl-${LIBPSL_VER}.tar.gz && \
-    echo "$LIBPSL_SHA256  libpsl-$LIBPSL_VER.tar.gz" | sha256sum -c - && \
-    tar xfz libpsl-${LIBPSL_VER}.tar.gz && cd libpsl-$LIBPSL_VER && \
-    CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS" LIBS="-ldl ${ADDITIONAL_LIBS}" \
-    ./configure --prefix=$PREFIX \
-    --disable-shared --disable-man --enable-builtin --host=$TARGET && \
-    make -j$(nproc) && make install && \
-    cd .. && rm -rf libpsl-$LIBPSL_VER libpsl-$LIBPSL_VER.tar.gz
+RUN chmod +x /scripts/*.sh
 
-ENV CURL_VER=8.20.0
-ENV CURL_SHA256="fc5819cad3f9f5482669adcdc49a782c15f36d2a0715b395b06d9173593d2dc0"
-RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
-    echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
-    tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
-    CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS" LIBS="-ldl ${ADDITIONAL_LIBS}" \
-    ./configure --enable-shared=no --with-zlib --with-openssl --enable-optimize --prefix=$PREFIX \
-    --with-ca-path=/etc/ssl/certs/ --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt --without-ca-fallback \
-    --disable-shared --disable-ldap --disable-sspi --without-librtmp --disable-ftp \
-    --disable-file --disable-dict --disable-telnet --disable-tftp --disable-manual --disable-ldaps \
-    --disable-dependency-tracking --disable-rtsp --disable-pop3  --disable-imap --disable-smtp \
-    --disable-gopher --disable-smb --without-libidn --disable-proxy --host=$TARGET && \
-    make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
-    cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
+RUN /scripts/install_zlib.sh
+RUN /scripts/install_openssl.sh
+RUN /scripts/install_libpsl.sh
+RUN /scripts/install_curl.sh
+RUN /scripts/install_sqlite.sh
 
-ENV SQLITE_VER=3530100
-ENV SQLITE_SHA256="e8971aaffc50f44210171808d21f595b3a17c9f00489ff1455b2cdad159e4731"
-RUN curl -sSL -O https://www.sqlite.org/2026/sqlite-autoconf-$SQLITE_VER.tar.gz && \
-    echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
-    tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && \
-    mkdir -p sqlite-autoconf-$SQLITE_VER/build && cd sqlite-autoconf-$SQLITE_VER/build && \
-    CC="$CC -fPIC -pie $ADDITIONAL_CFLAGS $ADDITIONAL_LIBS" ../configure --disable-shared \
-    --host=$TARGET --prefix=$PREFIX && \
-    make -j$(nproc) && make install && \
-    cd ../.. && rm -rf sqlite-autoconf-$SQLITE_VER sqlite-autoconf-$SQLITE_VER.tar.gz
+RUN rm -rf /scripts
 
 ENV OPENSSL_STATIC=1 \
     OPENSSL_DIR=$PREFIX \
@@ -90,14 +43,10 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-ENV RUST_VERSION=1.95.0
-ENV RUSTUP_VER=1.29.0
-
-ENV RUSTUP_AMD64_SHA256="4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"
-ENV RUSTUP_ARM64_SHA256="9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792"
-
 COPY install.sh .
-RUN ./install.sh && rm -rf install.sh
+RUN chmod +x install.sh && ./install.sh && rm install.sh
+
+RUN rm /versions.env
 
 COPY conf.sh .
-RUN ./conf.sh && rm -rf conf.sh
+RUN chmod +x conf.sh && ./conf.sh && rm conf.sh
