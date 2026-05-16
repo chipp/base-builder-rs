@@ -25,8 +25,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
     make -j$(nproc) && make install && \
     cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.5.0
-ENV SSL_SHA256="344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0"
+ENV SSL_VER=3.5.6
+ENV SSL_SHA256="deae7c80cba99c4b4f940ecadb3c3338b13cb77418409238e57d7f31f2a3b736"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
     echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
     tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -52,8 +52,8 @@ RUN curl -sSL -O https://github.com/rockdaboot/libpsl/releases/download/${LIBPSL
     make -j$(nproc) && make install && \
     cd .. && rm -rf libpsl-$LIBPSL_VER libpsl-$LIBPSL_VER.tar.gz
 
-ENV CURL_VER=8.13.0
-ENV CURL_SHA256="c261a4db579b289a7501565497658bbd52d3138fdbaccf1490fa918129ab45bc"
+ENV CURL_VER=8.20.0
+ENV CURL_SHA256="fc5819cad3f9f5482669adcdc49a782c15f36d2a0715b395b06d9173593d2dc0"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
     tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
@@ -67,9 +67,9 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
     make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
     cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
 
-ENV SQLITE_VER=3490100
-ENV SQLITE_SHA256="106642d8ccb36c5f7323b64e4152e9b719f7c0215acf5bfeac3d5e7f97b59254"
-RUN curl -sSL -O https://www.sqlite.org/2025/sqlite-autoconf-$SQLITE_VER.tar.gz && \
+ENV SQLITE_VER=3530100
+ENV SQLITE_SHA256="e8971aaffc50f44210171808d21f595b3a17c9f00489ff1455b2cdad159e4731"
+RUN curl -sSL -O https://www.sqlite.org/2026/sqlite-autoconf-$SQLITE_VER.tar.gz && \
     echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
     tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && \
     mkdir -p sqlite-autoconf-$SQLITE_VER/build && cd sqlite-autoconf-$SQLITE_VER/build && \
@@ -91,10 +91,10 @@ ENV OPENSSL_STATIC=1 \
 ENV PATH=/root/.cargo/bin:$PATH
 
 ENV RUST_VERSION=1.95.0
-ENV RUSTUP_VER=1.28.2
+ENV RUSTUP_VER=1.29.0
 
-ENV RUSTUP_AMD64_SHA256="20a06e644b0d9bd2fbdbfd52d42540bdde820ea7df86e92e533c073da0cdd43c"
-ENV RUSTUP_ARM64_SHA256="e3853c5a252fca15252d07cb23a1bdd9377a8c6f3efa01531109281ae47f841c"
+ENV RUSTUP_AMD64_SHA256="4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"
+ENV RUSTUP_ARM64_SHA256="9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792"
 
 COPY install.sh .
 RUN ./install.sh && rm -rf install.sh
