@@ -1,12 +1,12 @@
 .DEFAULT_GOAL := tag
 
-checksums: checksum_zlib checksum_ssl checksum_libpsl checksum_curl checksum_sqlite checksum_rustup
+checksums: checksum_zlib_ng checksum_ssl checksum_libpsl checksum_curl checksum_sqlite checksum_rustup
 
-checksum_zlib: ZLIB_VER=$(shell cat versions.env | grep "^ZLIB_VER=" | sed -e 's,ZLIB_VER="\(.*\)",\1,' | tr -d '\n')
-checksum_zlib: ZLIB_SHA256=$(shell curl -sSL https://zlib.net/zlib-$(ZLIB_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
-checksum_zlib:
-	@sed -i '' "s/ZLIB_SHA256=\"[0-9,a-f]*\"/ZLIB_SHA256=\"$(ZLIB_SHA256)\"/g" ./versions.env
-	@echo "zlib $(ZLIB_VER) $(ZLIB_SHA256)"
+checksum_zlib_ng: ZLIB_NG_VER=$(shell cat versions.env | grep "^ZLIB_NG_VER=" | sed -e 's,ZLIB_NG_VER="\(.*\)",\1,' | tr -d '\n')
+checksum_zlib_ng: ZLIB_NG_SHA256=$(shell curl -sSL https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$(ZLIB_NG_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
+checksum_zlib_ng:
+	@sed -i '' "s/ZLIB_NG_SHA256=\"[0-9a-f]*\"/ZLIB_NG_SHA256=\"$(ZLIB_NG_SHA256)\"/g" ./versions.env
+	@echo "zlib-ng $(ZLIB_NG_VER) $(ZLIB_NG_SHA256)"
 
 checksum_ssl: SSL_VER=$(shell cat versions.env | grep "^SSL_VER=" | sed -e 's,SSL_VER="\(.*\)",\1,' | tr -d '\n')
 checksum_ssl: SSL_SHA256=$(shell curl -sSL https://www.openssl.org/source/openssl-$(SSL_VER).tar.gz | sha256sum - | tr -d '-' | tr -d ' ')
