@@ -15,14 +15,13 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-COPY versions.env /versions.env
 SHELL ["/bin/bash", "-c"]
 
-RUN --mount=type=bind,source=scripts/install_zlib.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
-RUN --mount=type=bind,source=scripts/install_openssl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
-RUN --mount=type=bind,source=scripts/install_libpsl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
-RUN --mount=type=bind,source=scripts/install_curl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
-RUN --mount=type=bind,source=scripts/install_sqlite.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=versions.env,target=/versions.env --mount=type=bind,source=scripts/install_zlib.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=versions.env,target=/versions.env --mount=type=bind,source=scripts/install_openssl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=versions.env,target=/versions.env --mount=type=bind,source=scripts/install_libpsl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=versions.env,target=/versions.env --mount=type=bind,source=scripts/install_curl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=versions.env,target=/versions.env --mount=type=bind,source=scripts/install_sqlite.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
 
 ENV OPENSSL_STATIC=1 \
     OPENSSL_DIR=$PREFIX \
@@ -36,9 +35,9 @@ ENV OPENSSL_STATIC=1 \
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-COPY install.sh .
-COPY rust-version /rust-version
-RUN chmod +x install.sh && BASH_ENV=/versions.env RUST_VERSION="$(cat /rust-version)" ./install.sh && rm install.sh /rust-version /versions.env
+RUN --mount=type=bind,source=install.sh,target=/tmp/install.sh \
+    --mount=type=bind,source=rust-version,target=/rust-version \
+    --mount=type=bind,source=versions.env,target=/versions.env \
+    BASH_ENV=/versions.env RUST_VERSION="$(cat /rust-version)" bash /tmp/install.sh
 
-COPY conf.sh .
-RUN chmod +x conf.sh && ./conf.sh && rm conf.sh
+RUN --mount=type=bind,source=conf.sh,target=/tmp/conf.sh bash /tmp/conf.sh
