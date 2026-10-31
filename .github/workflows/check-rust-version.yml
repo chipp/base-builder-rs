@@ -17,30 +17,30 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get latest Rust version
         id: get_latest_version
         run: |
           LATEST_VERSION=$(curl -sSq https://static.rust-lang.org/dist/channel-rust-stable.toml | sed -n -e "/^\[pkg.rust\]/,/^\[/p" | sed '$d' | grep "^version" | cut -d "=" -f2- | tr -d '"' | sed -e 's,[[:space:]]*\(1\.[[:digit:]]*\.[[:digit:]]\).*,\1,' | tr -d '\n')
-          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "latest_version=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "Latest Rust version: $LATEST_VERSION"
 
       - name: Get current Rust version
         id: get_current_version
         run: |
           CURRENT_VERSION=$(cat rust-version)
-          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
           echo "Current Rust version: $CURRENT_VERSION"
 
       - name: Check if update is needed
         id: check_update
         run: |
           if [ "${{ steps.get_latest_version.outputs.latest_version }}" != "${{ steps.get_current_version.outputs.current_version }}" ]; then
-            echo "update_needed=true" >> $GITHUB_OUTPUT
+            echo "update_needed=true" >> "$GITHUB_OUTPUT"
             echo "Update needed: ${{ steps.get_current_version.outputs.current_version }} -> ${{ steps.get_latest_version.outputs.latest_version }}"
           else
-            echo "update_needed=false" >> $GITHUB_OUTPUT
+            echo "update_needed=false" >> "$GITHUB_OUTPUT"
             echo "Already up to date: ${{ steps.get_current_version.outputs.current_version }}"
           fi
 
@@ -83,8 +83,8 @@ jobs:
           PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oP 'pull/\K\d+' || echo "")
           PR_URL=$(echo "$PR_OUTPUT" | grep -oP 'https://github.com/[^\s]+' || echo "")
           
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Created PR #$PR_NUMBER: $PR_URL"
 
       - name: Trigger test workflow
