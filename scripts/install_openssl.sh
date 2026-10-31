@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz
+curl -fLsS --retry 3 -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz
 echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c -
 tar xfz openssl-${SSL_VER}.tar.gz
 cd openssl-$SSL_VER

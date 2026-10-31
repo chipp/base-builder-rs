@@ -12,7 +12,7 @@ case $TARGETARCH in
     ;;
 esac
 
-curl -O https://static.rust-lang.org/rustup/archive/$RUSTUP_VER/$HOST_ARCH/rustup-init
+curl -fLsS --retry 3 -O https://static.rust-lang.org/rustup/archive/$RUSTUP_VER/$HOST_ARCH/rustup-init
 
 echo "$RUSTUP_SHA256 *rustup-init" | sha256sum -c -
 chmod +x rustup-init

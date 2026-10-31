@@ -15,14 +15,14 @@ RUN cargo clippy --all-targets --all-features -- -D warnings
 
 RUN cargo test --no-run && \
     cp $(cargo test --no-run --message-format=json -q | tail -n 2 | head -n 1 | jq -r .executable) ./validate-test && \
+    ${TARGET}-readelf -l ./validate-test > /tmp/program-headers && \
+    ${TARGET}-readelf -d ./validate-test > /tmp/dynamic-section && \
+    ! grep -q INTERP /tmp/program-headers && \
+    ! grep -q NEEDED /tmp/dynamic-section && \
     rm -rf target
 
 FROM emulator AS test-runner
 COPY --from=builder /home/rust/src/validate-test ./
+COPY --from=project versions.env /versions.env
 
-ENV OPENSSL_VERSION="OpenSSL 3.5.6 7 Apr 2026"
-ENV ZLIB_VERSION="1.3.1.zlib-ng"
-ENV CURL_VERSION="libcurl/8.20.0 OpenSSL/3.5.6 zlib/1.3.1.zlib-ng libpsl/0.21.5"
-ENV SQLITE_VERSION="3.53.1"
-
-RUN ./validate-test
+RUN set -a && . /versions.env && set +a && ./validate-test

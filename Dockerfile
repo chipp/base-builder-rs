@@ -16,20 +16,13 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 COPY versions.env /versions.env
-COPY scripts/ /scripts/
-
-ENV BASH_ENV=/versions.env
 SHELL ["/bin/bash", "-c"]
 
-RUN chmod +x /scripts/*.sh
-
-RUN /scripts/install_zlib.sh
-RUN /scripts/install_openssl.sh
-RUN /scripts/install_libpsl.sh
-RUN /scripts/install_curl.sh
-RUN /scripts/install_sqlite.sh
-
-RUN rm -rf /scripts
+RUN --mount=type=bind,source=scripts/install_zlib.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=scripts/install_openssl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=scripts/install_libpsl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=scripts/install_curl.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
+RUN --mount=type=bind,source=scripts/install_sqlite.sh,target=/tmp/install.sh BASH_ENV=/versions.env bash /tmp/install.sh
 
 ENV OPENSSL_STATIC=1 \
     OPENSSL_DIR=$PREFIX \
@@ -44,9 +37,8 @@ ENV OPENSSL_STATIC=1 \
 ENV PATH=/root/.cargo/bin:$PATH
 
 COPY install.sh .
-RUN chmod +x install.sh && ./install.sh && rm install.sh
-
-RUN rm /versions.env
+COPY rust-version /rust-version
+RUN chmod +x install.sh && BASH_ENV=/versions.env RUST_VERSION="$(cat /rust-version)" ./install.sh && rm install.sh /rust-version /versions.env
 
 COPY conf.sh .
 RUN chmod +x conf.sh && ./conf.sh && rm conf.sh

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz
+curl -fLsS --retry 3 -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz
 echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c -
 tar xfz curl-${CURL_VER}.tar.gz
 cd curl-$CURL_VER
