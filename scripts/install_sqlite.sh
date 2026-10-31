@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-curl -sSL -O https://www.sqlite.org/2026/sqlite-autoconf-$SQLITE_VER.tar.gz
+curl -fLsS --retry 3 -O https://www.sqlite.org/2026/sqlite-autoconf-$SQLITE_VER.tar.gz
 echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c -
 tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz
 mkdir -p sqlite-autoconf-$SQLITE_VER/build

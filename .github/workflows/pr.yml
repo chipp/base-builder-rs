@@ -76,6 +76,7 @@ jobs:
             --load \
             --platform ${{ matrix.test_platform }} \
             --build-context base-builder-rs=oci-layout://local:test \
+            --build-context project=. \
             --build-context emulator=docker-image://${{ matrix.platform_prefix }}/alpine \
             --no-cache \
             --tag $IMAGE_ID:validate
